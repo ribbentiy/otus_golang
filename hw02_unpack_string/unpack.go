@@ -21,33 +21,29 @@ func Unpack(incomingString string) (string, error) {
 				resultString.WriteRune(processingChar)
 				processingChar = 0
 			}
-			if escapeFlag == true {
+			if escapeFlag {
 				processingChar = char
 				escapeFlag = false
 			} else {
 				escapeFlag = true
 			}
-		case unicode.IsDigit(char):
-			if escapeFlag {
-				processingChar = char
-				escapeFlag = false
-			} else if processingChar != 0 {
-				letter := fmt.Sprintf("%c", processingChar)
-				str := strings.Repeat(letter, int(char-48))
-				resultString.WriteString(str)
-				processingChar = 0
-			} else {
-				return "", ErrInvalidString
-			}
+		case unicode.IsDigit(char) && escapeFlag:
+			processingChar = char
+			escapeFlag = false
+		case unicode.IsDigit(char) && processingChar != 0:
+			letter := fmt.Sprintf("%c", processingChar)
+			str := strings.Repeat(letter, int(char-48))
+			resultString.WriteString(str)
+			processingChar = 0
+		case unicode.IsDigit(char) && (!escapeFlag || processingChar == 0):
+			return "", ErrInvalidString
 		default:
 			escapeFlag = false
 			if processingChar != 0 {
 				resultString.WriteRune(processingChar)
 			}
 			processingChar = char
-
 		}
-
 	}
 	if processingChar != 0 {
 		resultString.WriteRune(processingChar)
