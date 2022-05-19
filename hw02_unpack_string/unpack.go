@@ -2,7 +2,7 @@ package hw02unpackstring
 
 import (
 	"errors"
-	"fmt"
+	"strconv"
 	"strings"
 	"unicode"
 )
@@ -16,7 +16,7 @@ func Unpack(incomingString string) (string, error) {
 
 	for _, char := range incomingString {
 		switch {
-		case char == 92:
+		case string(char) == `\`:
 			if processingChar != 0 {
 				resultString.WriteRune(processingChar)
 				processingChar = 0
@@ -31,8 +31,12 @@ func Unpack(incomingString string) (string, error) {
 			processingChar = char
 			escapeFlag = false
 		case unicode.IsDigit(char) && processingChar != 0:
-			letter := fmt.Sprintf("%c", processingChar)
-			str := strings.Repeat(letter, int(char-48))
+			letter := string(processingChar)
+			count, err := strconv.Atoi(string(char))
+			if err != nil {
+				return "", err
+			}
+			str := strings.Repeat(letter, count)
 			resultString.WriteString(str)
 			processingChar = 0
 		case unicode.IsDigit(char) && (!escapeFlag || processingChar == 0):
