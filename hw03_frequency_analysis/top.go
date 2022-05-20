@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-var re = regexp.MustCompile(`[а-яА-Я\-\w]+`)
+var onlyWords = regexp.MustCompile(`[^\s\x{2000}-\x{206F}\x{2E00}-\x{2E7F}\\'!"#$%&()*+,./:;<=>?@\[\]^_{|}~]+`)
 
 type textObj struct {
 	count int
@@ -14,14 +14,13 @@ type textObj struct {
 }
 
 func Top10(text string) []string {
-	if len(text) == 0 || len(strings.Fields(text)) == 0 {
+	toCount := onlyWords.FindAllString(text, -1)
+	if len(text) == 0 || len(toCount) == 0 {
 		return nil
 	}
-	toCount := strings.Fields(text)
 	mapOfStr := make(map[string]*textObj, len(toCount))
 	for _, s := range toCount {
 		key := strings.ToLower(s)
-		key = string(re.Find([]byte(key)))
 		if key == "-" {
 			continue
 		}
