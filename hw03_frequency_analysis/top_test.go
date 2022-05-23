@@ -7,7 +7,7 @@ import (
 )
 
 // Change to true if needed.
-var taskWithAsteriskIsCompleted = false
+var taskWithAsteriskIsCompleted = true
 
 var text = `Как видите, он  спускается  по  лестнице  вслед  за  своим
 	другом   Кристофером   Робином,   головой   вниз,  пересчитывая
@@ -47,6 +47,9 @@ func TestTop10(t *testing.T) {
 	t.Run("no words in empty string", func(t *testing.T) {
 		require.Len(t, Top10(""), 0)
 	})
+	t.Run("no words in string contained only spaces", func(t *testing.T) {
+		require.Len(t, Top10("\n \t\t\n"), 0)
+	})
 
 	t.Run("positive test", func(t *testing.T) {
 		if taskWithAsteriskIsCompleted {
@@ -78,5 +81,56 @@ func TestTop10(t *testing.T) {
 			}
 			require.Equal(t, expected, Top10(text))
 		}
+	})
+	t.Run("English text", func(t *testing.T) {
+		englishText := `Some random english text! With some random words, separated by some punctuation chars!
+						more words  and  artificial 	spaces! And - even "-"`
+		expected := []string{
+			"some",       // 3
+			"and",        // 2
+			"random",     // 2
+			"words",      // 2
+			"artificial", // 1
+			"by",         // 1
+			"chars",      // 1
+			"english",    // 1
+			"even",       // 1
+			"more",       // 1
+		}
+		require.Equal(t, expected, Top10(englishText))
+	})
+
+	t.Run("Chinese text", func(t *testing.T) {
+		chText := `大家好!
+
+		我叫伊拉. 我是学生. 我在大学学习外语, 我会说英语和汉语. 因为我和我的朋友学习汉语, 所以, 我们要在假期去中国了解中国文化, 
+		练习汉语口语. 安德烈说, 我们在中国可以报语言学校, 佩佳找到了一所学校, 于是我买了飞机票. 卡佳在宾馆订了两间房间. 拿到签证以后, 
+		我们就出发了. 今天(二月二日, 星期一)是我们在北京的第一天.
+		二月二日, 星期一
+		下午两点十分, 我们到了北京首都国际机场. 这给我的第一印象如何? 这儿是什么：是机场还是天堂?
+		两点三十分, 我们接受护照检查. 这是怎么回事? 这是旅客在排队吗? 我们走近柜台, 盖了印. 边防警察很热情. 
+		他问我是哪国人以及来中国的目的是什么. 我用汉语回答, 我来中国学习汉语, 他很高兴. 两分钟以后, 我们就去取行李了.
+		两点五十分, 我们取了行李, 往出口去了. 我喜欢这儿. 我问朋友喜欢不喜欢这儿, 他们回答他们也喜欢.
+		快轨站在哪儿? 快轨站在楼下. 我们去了楼下, 买了快轨票. 因为我们是学生, 所以我们买的票并不贵.
+		六点十分, 我们到了北京. 因为我们很累, 所以我们想找到我们的宾馆休息. 北京很大, 所以我们用地图找宾馆. 我们可以打的去, 但我们有地图, 所以我们走路去.`
+		expected := []string{
+			"二月二日",      // 2
+			"星期一",       // 2
+			"下午两点十分",    // 1
+			"两分钟以后",     // 1
+			"两点三十分",     // 1
+			"两点五十分",     // 1
+			"买了快轨票",     // 1
+			"于是我买了飞机票",  // 1
+			"今天",        // 1
+			"他们回答他们也喜欢", // 1
+		}
+		require.Equal(t, expected, Top10(chText))
+	})
+
+	t.Run("Lexical order", func(t *testing.T) {
+		seq := "q w e r t y u i o p a s d f g h j k l [ ] z x c v b n m"
+		expected := []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"}
+		require.Equal(t, expected, Top10(seq))
 	})
 }
