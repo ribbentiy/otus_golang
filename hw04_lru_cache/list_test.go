@@ -15,6 +15,28 @@ func TestList(t *testing.T) {
 		require.Nil(t, l.Back())
 	})
 
+	t.Run("remove single element", func(t *testing.T) {
+		l := NewList()
+		l.PushFront(10)
+		require.Equal(t, 1, l.Len())
+		i := l.Front()
+		l.Remove(i)
+		require.Equal(t, 0, l.Len())
+		require.Nil(t, l.Front())
+		require.Nil(t, l.Back())
+	})
+
+	t.Run("list connectivity", func(t *testing.T) {
+		l := NewList()
+		l.PushFront(10)
+		require.Equal(t, l.Front(), l.Back())
+		l.PushFront(20)
+		require.Equal(t, l.Front().Next, l.Back())
+		l.PushBack(30)
+		require.Equal(t, l.Back().Prev, l.Front().Next)
+		require.Equal(t, l.Front().Next.Next, l.Back())
+	})
+
 	t.Run("complex", func(t *testing.T) {
 		l := NewList()
 
