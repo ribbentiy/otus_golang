@@ -53,7 +53,6 @@ func TestPipeline(t *testing.T) {
 			result = append(result, s.(string))
 		}
 		elapsed := time.Since(start)
-
 		require.Equal(t, []string{"102", "104", "106", "108", "110"}, result)
 		require.Less(t,
 			int64(elapsed),
@@ -86,8 +85,28 @@ func TestPipeline(t *testing.T) {
 			result = append(result, s.(string))
 		}
 		elapsed := time.Since(start)
-
 		require.Len(t, result, 0)
 		require.Less(t, int64(elapsed), int64(abortDur)+int64(fault))
+	})
+
+	t.Run("empty pipeline returns the same sequence", func(t *testing.T) {
+		in := make(Bi)
+		done := make(Bi)
+		data := []int{1, 2, 3, 4, 5}
+
+		var emptyStages []Stage
+
+		go func() {
+			for _, v := range data {
+				in <- v
+			}
+			close(in)
+		}()
+
+		result := make([]int, 0, 5)
+		for s := range ExecutePipeline(in, done, emptyStages...) {
+			result = append(result, s.(int))
+		}
+		require.Equal(t, []int{1, 2, 3, 4, 5}, result)
 	})
 }
