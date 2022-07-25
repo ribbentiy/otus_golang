@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 )
@@ -19,7 +18,6 @@ func RunCmd(cmd []string, env Environment) (returnCode int) {
 	}
 
 	cmdExec := exec.Command(cmd[0], cmd[1:]...) //nolint
-	fmt.Println(cmdExec)
 	cmdExec.Stdout = os.Stdout
 	cmdExec.Stderr = os.Stderr
 	var appEnv []string
@@ -27,7 +25,7 @@ func RunCmd(cmd []string, env Environment) (returnCode int) {
 		if value.NeedRemove {
 			err := os.Unsetenv(key)
 			if err != nil {
-				log.Fatal(err.Error())
+				return failCode
 			}
 		} else {
 			appEnv = append(appEnv, fmt.Sprintf("%s=%s", key, value.Value))
