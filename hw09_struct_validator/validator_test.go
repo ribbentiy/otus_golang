@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 type UserRole string
@@ -37,23 +39,114 @@ type (
 )
 
 func TestValidate(t *testing.T) {
+	invalidUser := User{
+		ID:     "invalidLength",
+		Name:   "TooOld",
+		Age:    60,
+		Email:  "invalidEmail",
+		Role:   "notAdmin",
+		Phones: []string{"123"},
+		meta:   json.RawMessage("some message"),
+	}
+
 	tests := []struct {
 		in          interface{}
 		expectedErr error
 	}{
 		{
-			// Place your code here.
+			App{Version: "12345"},
+			nil,
 		},
-		// ...
-		// Place your code here.
+		{
+			App{Version: "1234567"},
+			ValidationErrors{ValidationError{
+				Field: "Version",
+				Err:   fmt.Errorf("%w: %v", ErrValidationError, ErrStringInvalidLen),
+			}},
+		},
+		{
+			User{
+				ID:     "mx87HVXHNapvix9MAtmHCJCXqkGGPWiyp3xD",
+				Name:   "Terry",
+				Age:    40,
+				Email:  "im@thehorse.yes",
+				Role:   "admin",
+				Phones: []string{"12312312312"},
+				meta:   json.RawMessage("some message"),
+			},
+			nil,
+		},
+		{
+			invalidUser,
+			ValidationErrors{
+				ValidationError{
+					Field: "ID",
+					Err:   fmt.Errorf("%w: %v", ErrValidationError, ErrStringInvalidLen),
+				},
+				ValidationError{
+					Field: "Age",
+					Err:   fmt.Errorf("%w: %v", ErrValidationError, ErrNumberMoreThanMax),
+				},
+				ValidationError{
+					Field: "Email",
+					Err:   fmt.Errorf("%w: %v", ErrValidationError, ErrStringInvalidRegexp),
+				},
+				ValidationError{
+					Field: "Role",
+					Err:   fmt.Errorf("%w: %v", ErrValidationError, ErrValueNotInList),
+				},
+				ValidationError{
+					Field: "Phones",
+					Err:   fmt.Errorf("%w: %v", ErrValidationError, ErrStringInvalidLen),
+				},
+			},
+		},
+		{
+			struct {
+				User User `validate:"nested"`
+				App  App  `validate:"nested"`
+			}{
+				User: invalidUser,
+				App: App{
+					Version: "12345",
+				},
+			},
+			ValidationErrors{
+				ValidationError{
+					Field: "User",
+					Err: ValidationErrors{
+						ValidationError{
+							Field: "ID",
+							Err:   fmt.Errorf("%w: %v", ErrValidationError, ErrStringInvalidLen),
+						},
+						ValidationError{
+							Field: "Age",
+							Err:   fmt.Errorf("%w: %v", ErrValidationError, ErrNumberMoreThanMax),
+						},
+						ValidationError{
+							Field: "Email",
+							Err:   fmt.Errorf("%w: %v", ErrValidationError, ErrStringInvalidRegexp),
+						},
+						ValidationError{
+							Field: "Role",
+							Err:   fmt.Errorf("%w: %v", ErrValidationError, ErrValueNotInList),
+						},
+						ValidationError{
+							Field: "Phones",
+							Err:   fmt.Errorf("%w: %v", ErrValidationError, ErrStringInvalidLen),
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for i, tt := range tests {
+		tt := tt
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
-			tt := tt
 			t.Parallel()
 
-			// Place your code here.
+			require.Equal(t, tt.expectedErr, Validate(tt.in))
 			_ = tt
 		})
 	}
